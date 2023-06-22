@@ -7,6 +7,7 @@ const global ={
 }
 //console.log(global.currentPage)
 
+//display 20 most popular movies
 async function displayPopularMovies(){
     const  { results }  = await fetchAPIData('movie/popular'); //passing endpoint here
     
@@ -39,16 +40,198 @@ async function displayPopularMovies(){
     });
 }
 
+//display 20 most popular TV shows
+async function displayPopularShows(){
+    const  { results }  = await fetchAPIData('tv/popular'); //passing endpoint here
+    
+    results.forEach((show) => {
+        const div= document.createElement('div');
+        div.classList.add('card'); 
+        //checking for movie img in data if exists fetch else no-image 
+        div.innerHTML = ` 
+            <a href='tv-details.html?id=${show.id}'>
+           ${show.poster_path 
+            ? `<img src="https://image.tmdb.org/t/p/w500${show.poster_path}"
+           class="card-img-top"
+           alt="${show.name}"
+           />` 
+           : `<img src="../images/no-image.jpg"
+           class="card-img-top"
+           alt="${show.name}"
+           />`
+            }
+            </a>
+            <div class= "card-body">
+            <h5 class= "card-title">${show.name}</h5>
+            <p class= "card-text">
+            <small class="text-muted">Air Date: ${show.firs_air_date}</small>
+            </p>
+            </div>
+        `;
+
+        document.querySelector('#popular-shows').appendChild(div);
+    });
+}
+
+//Display Movie Details
+async function displayMovieDetails(){
+    const movieId=window.location.search.split('=')[1];
+    //id shows as ?id=436270 so we are splitting at '=' to get an array of ["?id", "436270"] and then we only use the number. we will use this id for each movie for when clicked on it we will get details of that movie
+
+    const movie = await fetchAPIData(`movie/${movieId}`);
+
+    //overlay for bacground image offered in api
+    displayBackgroundImage('movie', movie.backdrop_path);
+
+    const div = document.createElement('div');
+    div.innerHTML =`
+    <div class="details-top">
+          <div>
+          ${movie.poster_path 
+            ? `<img src="https://image.tmdb.org/t/p/w500${movie.poster_path}"
+           class="card-img-top"
+           alt="${movie.title}"
+           />` 
+           : `<img src="../images/no-image.jpg"
+           class="card-img-top"
+           alt="${movie.title}"
+           />`
+            }
+          </div>
+          <div>
+            <h2>${movie.title}</h2>
+            <p>
+              <i class="fas fa-star text-primary"></i>
+              ${movie.vote_average.toFixed(1)} / 10
+            </p>
+            <p class="text-muted">Release Date: ${movie.release_date}</p>
+            <p>
+              ${movie.overview}
+            </p>
+            <h5>Genres</h5>
+            <ul class="list-group">
+              ${movie.genres.map((genre)=> `<li>${genre.name}</li>`).join('')}
+            </ul>
+            <a href="${movie.homepage}" target="_blank" class="btn">Visit Movie Homepage</a>
+          </div>
+        </div>
+        <div class="details-bottom">
+          <h2>Movie Info</h2>
+          <ul>
+            <li><span class="text-secondary">Budget:</span> $${addCommasToNumber(movie.budget)}</li> 
+            <li><span class="text-secondary">Revenue:</span> $${addCommasToNumber(movie.revenue)}</li>
+            <li><span class="text-secondary">Runtime:</span> ${movie.runtime} minutes</li>
+            <li><span class="text-secondary">Status:</span> ${movie.status}</li>
+          </ul>
+          <h4>Production Companies</h4>
+          <div class="list-group">${movie.production_companies.map((company)=>`<span>${company.name}</span>`).join(', ')}</div>
+        </div>
+    `;
+
+    document.querySelector('#movie-details').appendChild(div);
+}
+
+//Display show details
+async function displayShowDetails(){
+    const showId=window.location.search.split('=')[1];
+    //id shows as ?id=436270 so we are splitting at '=' to get an array of ["?id", "436270"] and then we only use the number. we will use this id for each movie for when clicked on it we will get details of that movie
+
+    const show = await fetchAPIData(`tv/${showId}`);
+
+    //overlay for bacground image offered in api
+    displayBackgroundImage('tv', show.backdrop_path);
+    const div = document.createElement('div');
+    div.innerHTML =`
+    <div class="details-top">
+          <div>
+          ${show.poster_path 
+            ? `<img src="https://image.tmdb.org/t/p/w500${show.poster_path}"
+           class="card-img-top"
+           alt="${show.name}"
+           />` 
+           : `<img src="../images/no-image.jpg"
+           class="card-img-top"
+           alt="${show.name}"
+           />`
+            }
+          </div>
+          <div>
+            <h2>${show.name}</h2>
+            <p>
+              <i class="fas fa-star text-primary"></i>
+              ${show.vote_average.toFixed(1)} / 10
+            </p>
+            <p class="text-muted">Last Air Date: ${show.last_air_date}</p>
+            <p>
+              ${show.overview}
+            </p>
+            <h5>Genres</h5>
+            <ul class="list-group">
+              ${show.genres.map((genre)=> `<li>${genre.name}</li>`).join('')}
+            </ul>
+            <a href="${show.homepage}" target="_blank" class="btn">Visit Movie Homepage</a>
+          </div>
+        </div>
+        <div class="details-bottom">
+          <h2>Show Info</h2>
+          <ul>
+            <li><span class="text-secondary">Number of Episodes:</span> ${show.number_of_episodes}</li> 
+            <li><span class="text-secondary">Last Episode to Air:</span> ${show.last_episode_to_air.name}</li>
+            <li><span class="text-secondary">Status:</span> ${show.status}</li>
+          </ul>
+          <h4>Production Companies</h4>
+          <div class="list-group">${show.production_companies.map((company)=>`<span>${company.name}</span>`).join(', ')}</div>
+        </div>
+    `;
+
+    document.querySelector('#show-details').appendChild(div);
+}
+
+//function for backgorund image offered in API
+function displayBackgroundImage(type, backgroundPath){
+    const overlayDiv = document.createElement('div');
+    overlayDiv.style.backgroundImage = `url(https://image.tmdb.org/t/p/original${backgroundPath})`;
+    overlayDiv.style.backgroundSize = 'cover';
+    overlayDiv.style.backgroundPosition = 'center';
+    overlayDiv.style.backgroundRepeat = 'no-repeat';
+    overlayDiv.style.height = '100vh';
+    overlayDiv.style.width = '100vw';
+    overlayDiv.style.position = 'absolute';
+    overlayDiv.style.top = '0';
+    overlayDiv.style.left = '0';
+    overlayDiv.style.zIndex = '-1';
+    overlayDiv.style.opacity = '0.15';
+
+    if(type === 'movie'){
+        document.querySelector('#movie-details').appendChild(overlayDiv)
+    }else{
+        document.querySelector('#show-details').appendChild(overlayDiv)
+    }
+}
+
+
 //Fetch data from TMDB API
 async function fetchAPIData(endpoint){
     const API_KEY = '89b065f503c852471b7275e86922c78e';
     const API_URL = 'https://api.themoviedb.org/3/';
+    showSpinner();
 
     const response = await fetch(`${API_URL}${endpoint}?api_key=${API_KEY}&language=en-US`);
 
     const data= await response.json();
+    hideSpinner();
     return data;
 }
+
+//show spinner function
+function showSpinner(){
+document.querySelector('.spinner').classList.add('show');
+}
+
+//remove spinner
+function hideSpinner(){
+    document.querySelector('.spinner').classList.remove('show');
+    }
 
 //Highlight active link
 function highlightActiveLink(){
@@ -60,6 +243,11 @@ function highlightActiveLink(){
     })
 }
 
+//add commas in movie details budget. using regular expression pattern
+function addCommasToNumber(number){
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
 //Init app and test for page locations
 function init(){  //init works on every page
     switch (global.currentPage){
@@ -68,13 +256,13 @@ function init(){  //init works on every page
             displayPopularMovies();
             break;
         case '/shows.html':
-            console.log('shows');
+            displayPopularShows();
             break;
         case '/movie-details.html':
-            console.log('movie details');
+            displayMovieDetails();
             break;
         case '/tv-details.html':
-            console.log('TV details');
+            displayShowDetails();
             break;
         case '/search.html':
             console.log('search');
